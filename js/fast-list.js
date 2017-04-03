@@ -31,7 +31,7 @@ var FastList = (function () {
 
     this.windowHeight = $(window).height();
     this.scrollTop = $(window).scrollTop();
-    this.overflowHeight = 200;
+    this.overflowHeight = -500;
     this.topSpace = 0;
     this.bottomSpace = this.windowHeight;
     this.totalItemHeight = 0;
@@ -55,7 +55,7 @@ var FastList = (function () {
       // 正向加载
       for (var i = startIndex; i < this.datas.length; i++) {
         curHolder = this.holderStack[holderPositon - 1];
-        if (!!curHolder && this.getHolderBottomOffset(curHolder) <= -100) {
+        if (!!curHolder && this.getHolderBottomOffset(curHolder) <= this.overflowHeight) {
           break;
         }
         var holder = this.getViewHolder(i, reverse);
@@ -68,9 +68,9 @@ var FastList = (function () {
     };
 
     this.getViewHolder = function (index, reverse) {
-
-      this.recycle();
-
+      if (this.holderStack.length > 300) {
+        this.recycle();
+      }
       for(var i=0; i<this.holderStack.length;i++){
         if(index == this.holderStack[i]._index){
           return this.holderStack[i];
@@ -137,9 +137,9 @@ var FastList = (function () {
       var endIndex = this.holderStack.length;
       for (var i = 0; i < this.holderStack.length; i++) {
         var holder = this.holderStack[i];
-        if (this.getHolderTopOffset(holder) < -100 && this.getHolderBottomOffset(holder) > -100){
+        if (this.getHolderTopOffset(holder) < this.overflowHeight && this.getHolderBottomOffset(holder) > this.overflowHeight){
           startIndex = i;
-        } else if (this.getHolderTopOffset(holder) > -100 && this.getHolderBottomOffset(holder) < -100) {
+        } else if (this.getHolderTopOffset(holder) > this.overflowHeight && this.getHolderBottomOffset(holder) < this.overflowHeight) {
           endIndex = i;
           break;
         }
@@ -196,19 +196,20 @@ var FastList = (function () {
       // a.push()
 
       // console.log('updateList===============');
+      this.recycle();
 
       this.windowHeight = $(window).height();
       this.scrollTop = $(window).scrollTop();
 
       // 加载上部 view
       var topHolder = this.holderStack[0];
-      if (this.getHolderTopOffset(topHolder) > -100) {
+      if (this.getHolderTopOffset(topHolder) > this.overflowHeight) {
         var reverse = true;
         var startIndex = topHolder._index;
         var curPosition = topHolder.view.offset().top;
         for (var i = startIndex - 1; i >= 0; i--) {
           topHolder = this.holderStack[0];
-          if (this.getHolderTopOffset(topHolder) <= -100) {
+          if (this.getHolderTopOffset(topHolder) <= this.overflowHeight) {
             break;
           }
           var data = this.datas[i];
@@ -221,14 +222,14 @@ var FastList = (function () {
 
       // 加载底部 view
       var bottomHolder = this.holderStack[this.holderStack.length - 1];
-      if (this.getHolderBottomOffset(bottomHolder) > -100) {
+      if (this.getHolderBottomOffset(bottomHolder) > this.overflowHeight) {
         var reverse = false;
         var startIndex = bottomHolder._index;
         var curPosition = bottomHolder.view.offset().top + bottomHolder.view.height();
         // 正向加载
         for (var i = startIndex + 1; i < this.datas.length; i++) {
           bottomHolder = this.holderStack[this.holderStack.length - 1];
-          if (this.getHolderBottomOffset(bottomHolder) <= -100) {
+          if (this.getHolderBottomOffset(bottomHolder) <= this.overflowHeight) {
             break;
           }
           var holder = this.getViewHolder(i, reverse);
