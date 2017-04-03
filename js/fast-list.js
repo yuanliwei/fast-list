@@ -207,6 +207,14 @@ var FastList = (function () {
       console.log('log end =======================');
     };
 
+    this.getHolderTopOffset = function (holder) {
+
+    };
+
+    this.getHolderBottomOffset = function (holder) {
+
+    };
+
     this.holderStack = [];
     this.holderCache = [];
     this.itemHeight = 0;
@@ -221,9 +229,58 @@ var FastList = (function () {
       // a.unshift(9)
       // a.pop()
       // a.push()
-      this.windowHeight = $(window).height();
-      this.scrollTop = $(window).scrollTop();
-      this.updateList();
+
+      // console.log('updateList===============');
+
+this.windowHeight
+
+      var startIndex = 0;
+      var reverse = false;
+      this.curPosition = 0;
+      if (this.holderStack.length > 0) {
+        var firstHolder = this.holderStack[0];
+        startIndex = firstHolder._index;
+        this.curPosition = firstHolder.view.offset().top;
+      }
+      // 正向加载
+      for (var i = startIndex; i < this.datas.length; i++) {
+        var overflow = this.curPosition - this.scrollTop - this.windowHeight - this.overflowHeight;
+        if (overflow > 0) {
+          break;
+        }
+        reverse = false;
+        var holder = this.getViewHolder(i, reverse);
+        var data = this.datas[i];
+        if (holder._index == i && holder._data === data) {
+          this.curPosition += holder.view.height();
+        } else {
+          this.bindData(i, holder, data);
+          this.curPosition += holder.view.height();
+        }
+      }
+
+      var lastHolder = this.holderStack[this.holderStack.length - 1];
+      startIndex = lastHolder._index;
+      this.curPosition = lastHolder.view.offset().top + lastHolder.view.height();
+      // 逆向加载
+      for (var i = startIndex; i >= 0; i--) {
+        var overflow = this.curPosition - this.scrollTop + this.overflowHeight + 300;
+        if (overflow < 0) {
+          break;
+        }
+        reverse = true;
+        var holder = this.getViewHolder(i, reverse);
+        var data = this.datas[i];
+        if (holder._index == i && holder._data === data) {
+          this.curPosition -= holder.view.height();
+        } else {
+          this.bindData(i, holder, data);
+          this.curPosition -= holder.view.height();
+          holder.view[0].style.top = this.curPosition + 'px';
+        }
+      }
+
+      this.recycle();
 
     };
 
