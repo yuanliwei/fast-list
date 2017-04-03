@@ -78,7 +78,9 @@ var FastList = (function () {
       }
       if (this.holderCache.length == 0) {
         console.log("cerate new viewholder ============");
-        var holder = this.handle.createView(this.itemTempl);
+        var view = $(this.itemTempl);
+        var holder = this.handle.createViewHolder(view);
+        holder.view = view;
         if (reverse) {
           this.holderStack.unshift(holder);
         } else {
