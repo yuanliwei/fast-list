@@ -47,6 +47,9 @@ var FastList = (function () {
         startIndex = startIndexAndCurPosition.start;
         curPosition = startIndexAndCurPosition.curPosition;
         console.log(JSON.stringify(startIndexAndCurPosition));
+        this.viewportHeightIndex = startIndex;
+        this.viewportHeight = curPosition;
+        this.bottomLayout[0].style.top =  this.viewportHeight / (i+1) * this.datas.length + 'px';
       }
       this.holderStack.forEach(function (holder) {
         holder.view[0].style.display = 'none';
