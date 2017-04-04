@@ -1,22 +1,24 @@
 var FastList = (function () {
   function FastList(root_) {
     this.root = root_;
-    var layout = this.root.find('.item-layout');
+
+    this.itemTempl = this.root.html();
     var item = this.root.find('.item');
-    this.itemTempl = layout.html();
+    this.itemTopOffset = item.offset().top;
+    this.itemLeftOffset = item.offset().left;
+    this.itemWidth = item.width();
+    item.remove();
+
     this.handle = null;
     this.datas = [];
-    item.remove();
-    this.itemLayoutTempl = root.html();
-    layout.remove();
-    this.bottomLayout = $(this.itemLayoutTempl);
-    this.root.append(this.bottomLayout);
-    this.bottomLayout[0].style.position = 'absolute';
-    this.bottomLayout[0].style.top = '0px';
-    this.bottomLayout[0].style.width = '1px';
-    this.bottomLayout[0].style.height = '1px';
+    this.holderStack = [];
+    this.holderCache = [];
+
     this.viewportHeightIndex = -1;
     this.viewportHeight = 0;   // 列表总高度
+    this.windowHeight = $(window).height();
+    this.scrollTop = $(window).scrollTop();
+    this.overflowHeight = -500;
 
     this.setHandle = function (handle_) {
       this.handle = handle_;
@@ -24,38 +26,38 @@ var FastList = (function () {
 
     this.setDatas = function (datas_) {
       this.datas = datas_;
-      this.updateList();
       this.viewportHeightIndex = -1;
       this.viewportHeight = 0;
+      this.updateList();
     };
 
-    this.windowHeight = $(window).height();
-    this.scrollTop = $(window).scrollTop();
-    this.overflowHeight = -500;
-    this.topSpace = 0;
-    this.bottomSpace = this.windowHeight;
-    this.totalItemHeight = 0;
-    this.topIndex = -1;
-    this.bottomIndex = -1;
-
     this.updateList = function () {
-      // console.log('updateList===============');
-
       // 加载底部 view
       var reverse = false;
       var startIndex = 0;
       var holderPositon = 0;
-      var curPosition = 0;
+      var curPosition = this.itemTopOffset;
       var curHolder = null;
+      this.viewportHeightIndex = -1;
+      this.viewportHeight = 0;
+      this.holderCache = this.holderCache.concat(this.holderStack);
       if (this.holderStack.length > 0) {
-        curHolder = this.holderStack[holderPositon];
-        startIndex = curHolder._index;
-        curPosition = curHolder.view.offset().top;
+        curPosition = this.holderStack[0].view.offset().top;
+        var startIndexAndCurPosition = this.countStartIndexAndCurPosition(curPosition);
+        startIndex = startIndexAndCurPosition.start;
+        curPosition = startIndexAndCurPosition.curPosition;
+        console.log(JSON.stringify(startIndexAndCurPosition));
       }
-      // 正向加载
+      this.holderStack.forEach(function (holder) {
+        holder.view[0].style.display = 'none';
+      });
+      this.holderStack = [];
+
+
       for (var i = startIndex; i < this.datas.length; i++) {
         curHolder = this.holderStack[holderPositon - 1];
         if (!!curHolder && this.getHolderBottomOffset(curHolder) <= this.overflowHeight) {
+          console.log('over!');
           break;
         }
         var holder = this.getViewHolder(i, reverse);
@@ -64,6 +66,9 @@ var FastList = (function () {
         holder.view[0].style.top = curPosition + 'px';
         curPosition += holder.view.height();
         holderPositon++;
+        if (holderPositon > this.holderStack.length - 1) {
+          holderPositon = this.holderStack.length - 1;
+        }
       }
     };
 
@@ -77,22 +82,12 @@ var FastList = (function () {
         }
       }
       if (this.holderCache.length == 0) {
-        console.log("cerate new viewholder ============");
-        var view = $(this.itemTempl);
-        var holder = this.handle.createViewHolder(view);
-        holder.view = view;
+        var holder = this.createViewHolder();
         if (reverse) {
           this.holderStack.unshift(holder);
         } else {
           this.holderStack.push(holder);
         }
-        this.root.append(holder.view);
-        var left = holder.view.offset().left;
-        holder.view[0].style.position = 'absolute';
-        holder.view[0].style.left = left + 'px';
-        holder.view[0].style.width = holder.view.width() + 'px';
-        holder._index = -1;
-        holder._height = 0;
         return holder;
       }
       var holder = this.holderCache.pop();
@@ -101,9 +96,24 @@ var FastList = (function () {
       } else {
         this.holderStack.push(holder);
       }
+      holder.view[0].style.display = '';
       holder._height = 0;
       holder._data = null;
       holder._index = -1;
+      return holder;
+    };
+
+    this.createViewHolder = function () {
+      console.log("cerate new viewholder ============");
+      var view = $(this.itemTempl);
+      var holder = this.handle.createViewHolder(view);
+      holder.view = view;
+      this.root.append(holder.view);
+      holder.view[0].style.position = 'absolute';
+      holder.view[0].style.left = this.itemLeftOffset + 'px';
+      holder.view[0].style.width = this.itemWidth + 'px';
+      holder._index = -1;
+      holder._height = 0;
       return holder;
     };
 
@@ -117,6 +127,46 @@ var FastList = (function () {
         this.bottomLayout[0].style.top =  this.viewportHeight / (i+1) * this.datas.length + 'px';
       }
     };
+
+    this.countStartIndexAndCurPosition = function (curPosition) {
+      var result = {'start':0, 'curPosition': this.itemTopOffset};
+      if (curPosition < this.windowHeight || this.datas.length < 200) {
+        return result;
+      }
+      if (this.holderCache.length < 300) {
+        var holder = this.createViewHolder();
+        holder.view[0].style.display = 'none';
+        this.holderCache.push(holder);
+      }
+      for (var i = 0; i < this.datas.length; ) {
+        for (var j = 0; j < this.holderCache.length && i < this.datas.length; j++, i++) {
+          var data = this.datas[i];
+          var holder = this.holderCache[j];
+          this.handle.bindData(i, holder, data);
+        }
+        for (var j = 0; j < this.holderCache.length; j++) {
+          var holder = this.holderCache[j];
+          result.curPosition += holder.view.height();
+          result.start++;
+          if (result.curPosition - this.scrollTop > this.overflowHeight) {
+            return result;
+          }
+          if (result.start > this.datas.length - 200) {
+            return result;
+          }
+        }
+      }
+    }
+
+    this.addBottomLayout = function () {
+      this.bottomLayout = $('<div></div>');
+      this.root.append(this.bottomLayout);
+      this.bottomLayout[0].style.position = 'absolute';
+      this.bottomLayout[0].style.top = '0px';
+      this.bottomLayout[0].style.width = '1px';
+      this.bottomLayout[0].style.height = '1px';
+    };
+    this.addBottomLayout();
 
     this.getTotalHeight = function(){
       var height = 0;
@@ -154,14 +204,14 @@ var FastList = (function () {
         topArr = this.holderStack.splice(0, startIndex+1);
       }
 
-      for (var i = 0; i < topArr.length; i++) {
-        var holder = topArr[i];
-        this.holderCache.push(holder);
-      }
-      for (var i = 0; i < bottomArr.length; i++) {
-        var holder = bottomArr[i];
-        this.holderCache.push(holder);
-      }
+      this.holderCache = this.holderCache.concat(topArr).concat(bottomArr);
+
+      topArr.forEach(function (holder) {
+        holder.view[0].style.display = 'none';
+      });
+      bottomArr.forEach(function (holder) {
+        holder.view[0].style.display = 'none';
+      });
 
     };
 
@@ -182,23 +232,7 @@ var FastList = (function () {
       return this.windowHeight - ( bottom - this.scrollTop );
     };
 
-    this.holderStack = [];
-    this.holderCache = [];
-    this.itemHeight = 0;
     this.scroll = function (event) {
-      // console.log('onScroll '+ event+'   top  ' + $(window).scrollTop());
-      // holder.view.offset().top
-      // holder.view.height()
-      // $(window).scrollTop();
-      // $(window).height()
-      // s.splice(0,1) 删除指定元素
-      // a.shift()
-      // a.unshift(9)
-      // a.pop()
-      // a.push()
-
-      // console.log('updateList===============');
-      this.recycle();
 
       this.windowHeight = $(window).height();
       this.scrollTop = $(window).scrollTop();
@@ -228,7 +262,6 @@ var FastList = (function () {
         var reverse = false;
         var startIndex = bottomHolder._index;
         var curPosition = bottomHolder.view.offset().top + bottomHolder.view.height();
-        // 正向加载
         for (var i = startIndex + 1; i < this.datas.length; i++) {
           bottomHolder = this.holderStack[this.holderStack.length - 1];
           if (this.getHolderBottomOffset(bottomHolder) <= this.overflowHeight) {
@@ -241,6 +274,9 @@ var FastList = (function () {
           curPosition += holder.view.height();
         }
       }
+
+      this.recycle();
+
     };
 
     FastList.instances.push(this);
