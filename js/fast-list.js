@@ -180,9 +180,9 @@ var FastList = (function () {
       var endIndex = this.holderStack.length;
       for (var i = 0; i < this.holderStack.length; i++) {
         var holder = this.holderStack[i];
-        if (this.getHolderTopOffset(holder) < this.overflowHeight && this.getHolderBottomOffset(holder) > this.overflowHeight){
+        if (this.getHolderTopOffset(holder) < this.overflowHeight*2 && this.getHolderBottomOffset(holder) > this.overflowHeight*2){
           startIndex = i;
-        } else if (this.getHolderTopOffset(holder) > this.overflowHeight && this.getHolderBottomOffset(holder) < this.overflowHeight) {
+        } else if (this.getHolderTopOffset(holder) > this.overflowHeight*2 && this.getHolderBottomOffset(holder) < this.overflowHeight*2) {
           endIndex = i;
           break;
         }
