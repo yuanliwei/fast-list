@@ -176,7 +176,6 @@ var FastList = (function () {
       }
       var topArr = [];
       var bottomArr = [];
-      var usedArr = [];
       var startIndex = -1;
       var endIndex = this.holderStack.length;
       for (var i = 0; i < this.holderStack.length; i++) {
