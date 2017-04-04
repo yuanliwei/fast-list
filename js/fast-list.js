@@ -53,7 +53,6 @@ var FastList = (function () {
       });
       this.holderStack = [];
 
-
       for (var i = startIndex; i < this.datas.length; i++) {
         curHolder = this.holderStack[holderPositon - 1];
         if (!!curHolder && this.getHolderBottomOffset(curHolder) <= this.overflowHeight) {
@@ -167,16 +166,6 @@ var FastList = (function () {
       this.bottomLayout[0].style.height = '1px';
     };
     this.addBottomLayout();
-
-    this.getTotalHeight = function(){
-      var height = 0;
-      if(this.holderStack.length == 0) return 0;
-      this.holderStack.forEach(function(holder){
-        height += holder._height;
-      });
-      var avgHeight = height / this.holderStack.length;
-      return avgHeight * this.datas.length;
-    };
 
     this.recycle = function () {
       if (this.holderStack.length == 0) {
