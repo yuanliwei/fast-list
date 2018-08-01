@@ -49,6 +49,7 @@
     var nameGen = new NameUtil()
     let dom = document.querySelector('#list')
     var list = new FastList(dom)
+    var holderCount = 0
     list.setHandler({
       createViewHolder: (type)=>{
         let view
@@ -57,6 +58,7 @@
           view = $(`<div class="pt-1 col-12"><div class="alert alert-primary" role="alert">
                       <b></b>
                       <span>A simple primary alert—check it out!</span>
+                      <i>${holderCount++}</i>
                     </div></div>`)
             return {
               dom: view[0],
@@ -67,6 +69,7 @@
             view = $(`<div class="pt-1 col-12"><div class="alert alert-success" role="alert">
                         <b></b>
                         <span>A simple success alert—check it out!</span>
+                        <i>${holderCount++}</i>
                       </div></div>`)
             return {
               dom: view[0],
