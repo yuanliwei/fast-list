@@ -16,11 +16,11 @@ class FastList {
     this.updateTime = 0
 
     this.root.onscroll = ()=>{
-      if (Date.now() - this.updateTime < 300) {
+      if (Date.now() - this.updateTime < 30) {
         clearTimeout(this.timer)
         this.timer = setTimeout(()=>{
           this.scroll();
-        }, 100)
+        }, 20)
       } else {
         this.scroll();
       }
