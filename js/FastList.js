@@ -35,7 +35,6 @@ class FastList {
     this.datas = datas || []
     this.anchor.style.transform=`translateY(${this.datas.length*this.maxItemHeight}px)`
     this.holderMap = {}
-    this.recycleViews(1,-1)
     this.notifyAll()
   }
 
@@ -61,7 +60,7 @@ class FastList {
     return holder
   }
 
-  recycleViews(top, bottom){
+  recycleViews(){
     for (var type in this.holders) {
       this.holders[type] = this.holders[type].filter((holder)=>{
         let pos = parseInt(holder.dom.style.transform.match(/\d+/))
@@ -78,7 +77,7 @@ class FastList {
     this.updateTime = Date.now()
     let topPosition = parseInt(this.root.scrollTop / this.maxItemHeight) * this.maxItemHeight
     let breakHeight = this.maxItemHeight + this.root.clientHeight
-    this.recycleViews(topPosition, breakHeight)
+    this.recycleViews()
     let countHeight = 0
     let index = parseInt(this.root.scrollTop / this.maxItemHeight)
     let domNum = 0
