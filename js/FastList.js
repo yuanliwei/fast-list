@@ -15,7 +15,14 @@ class FastList {
     this.cacheHolders = {}
     this.updateTime = 0
 
+    this.root.flingOffset = 0
+    this.root.lastScrollTopOffset = 0
+
     this.root.onscroll = ()=>{
+      this.root.flingOffset = this.root.scrollTop - this.root.lastScrollTopOffset
+      if (this.root.flingOffset < 3 * this.maxItemHeight) {
+        this.root.flingOffset = 0
+      }
       if (Date.now() - this.updateTime < 30) {
         clearTimeout(this.timer)
         this.timer = setTimeout(()=>{
@@ -75,7 +82,8 @@ class FastList {
 
   scroll(){
     this.updateTime = Date.now()
-    let topPosition = parseInt(this.root.scrollTop / this.maxItemHeight) * this.maxItemHeight
+    this.root.lastScrollTopOffset = this.root.scrollTop
+    let topPosition = parseInt(this.root.scrollTop / this.maxItemHeight) * this.maxItemHeight + this.root.flingOffset
     let breakHeight = this.maxItemHeight + this.root.clientHeight
     this.recycleViews()
     let countHeight = 0
