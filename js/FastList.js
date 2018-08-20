@@ -42,7 +42,7 @@ class FastList {
   setUpNoData(){
     if (this.datas.length > 0) {
       if (this.noDataView) {
-        this.root.remove(this.noDataView)
+        this.noDataView.remove()
       }
     } else {
       if (!this.noDataView) {
