@@ -1,0 +1,23 @@
+{
+  "name": "fast-list",
+  "version": "1.0.0",
+  "description": "显示大量数据列表的工具类，使用view回收重用方式实现。",
+  "main": "./js/FastList.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuanliwei/fast-list.git"
+  },
+  "keywords": [
+    "fast",
+    "list"
+  ],
+  "author": "yuanliwei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yuanliwei/fast-list/issues"
+  },
+  "homepage": "https://github.com/yuanliwei/fast-list#readme"
+}
