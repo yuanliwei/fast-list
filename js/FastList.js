@@ -36,6 +36,26 @@ class FastList {
     this.anchor.style.transform=`translateY(${this.datas.length*this.maxItemHeight}px)`
     this.holderMap = {}
     this.notifyAll()
+    this.setUpNoData()
+  }
+
+  setUpNoData(){
+    if (this.datas.length > 0) {
+      if (this.noDataView) {
+        this.root.remove(this.noDataView)
+      }
+    } else {
+      if (!this.noDataView) {
+        let createNoDataView = ()=>{
+          let h1 = document.createElement('h1')
+          h1.innerText = 'NO DATA!'
+          h1.classList.add('text-info')
+          return h1
+        }
+        this.noDataView = this.handler.createNoDataView && this.handler.createNoDataView() || createNoDataView()
+      }
+      this.root.prepend(this.noDataView)
+    }
   }
 
   notifyAll(){
@@ -81,6 +101,9 @@ class FastList {
     let countHeight = 0
     let index = parseInt(this.root.scrollTop / this.maxItemHeight)
     let domNum = 0
+    if (index > this.datas.length) {
+      this.root.scrollTop = this.maxItemHeight*this.datas.length-breakHeight
+    }
     for (; index < this.datas.length; index++, domNum++) {
       let data = this.datas[index]
       let holder = this.getHolder(data.type)
@@ -98,3 +121,5 @@ class FastList {
     }
   }
 }
+
+module.exports = FastList
