@@ -1,10 +1,11 @@
 {
   "name": "recycle-list-view",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "显示大量数据列表的工具类，使用view回收重用方式实现。",
   "main": "./js/FastList.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npx http-server -c-1 -o demo.html"
   },
   "repository": {
     "type": "git",
