@@ -41,53 +41,29 @@ export class FastList {
     })
     this.resizeObserver.observe(this.list)
 
-    this.list.addEventListener("wheel", (e) => { this.onWheel(e) }, { passive: false })
-    this.list.addEventListener("touchstart", (e) => { this.onTouchStart(e) }, { passive: true })
-    this.list.addEventListener("touchmove", (e) => { this.onTouchMove(e) }, { passive: false })
-    this.list.addEventListener("touchend", (e) => { this.onTouchEnd(e) })
-    this.list.addEventListener("scroll", (e) => { this.onScroll() })
+    const listState = this.listState
+    this.listeners = {
+      onTouchStart(/**@type{*}*/e) { listState.onTouchStart(e) },
+      onTouchMove(/**@type{*}*/e) { listState.onTouchMove(e) },
+      onTouchEnd(/**@type{*}*/e) { listState.onTouchEnd(e) },
+      onWheel(/**@type{*}*/e) { listState.onWheel(e) },
+      onScroll() { listState.onScroll() },
+    }
+
+    this.list.addEventListener("wheel", this.listeners.onWheel, { passive: false })
+    this.list.addEventListener("touchstart", this.listeners.onTouchStart, { passive: true })
+    this.list.addEventListener("touchmove", this.listeners.onTouchMove, { passive: false })
+    this.list.addEventListener("touchend", this.listeners.onTouchEnd)
+    this.list.addEventListener("scroll", this.listeners.onScroll)
   }
 
   destroy() {
     this.resizeObserver.unobserve(this.list)
-    this.list.removeEventListener("wheel", this.onWheel)
-    this.list.removeEventListener("touchstart", this.onTouchStart)
-    this.list.removeEventListener("touchmove", this.onTouchMove)
-    this.list.removeEventListener("touchend", this.onTouchEnd)
-    this.list.removeEventListener("scroll", this.onScroll)
-  }
-
-
-  /**
-   * @param {TouchEvent} e
-   */
-  onTouchStart(e) {
-    this.listState.onTouchStart(e)
-  }
-
-  /**
-   * @param {TouchEvent} e
-   */
-  onTouchMove(e) {
-    this.listState.onTouchMove(e)
-  }
-
-  /**
-   * @param {TouchEvent} e
-   */
-  onTouchEnd(e) {
-    this.listState.onTouchEnd(e)
-  }
-
-  /**
-   * @param {WheelEvent} e
-   */
-  onWheel(e) {
-    this.listState.onWheel(e)
-  }
-
-  onScroll() {
-    this.listState.onScroll()
+    this.list.removeEventListener("wheel", this.listeners.onWheel)
+    this.list.removeEventListener("touchstart", this.listeners.onTouchStart)
+    this.list.removeEventListener("touchmove", this.listeners.onTouchMove)
+    this.list.removeEventListener("touchend", this.listeners.onTouchEnd)
+    this.list.removeEventListener("scroll", this.listeners.onScroll)
   }
 
   /**
