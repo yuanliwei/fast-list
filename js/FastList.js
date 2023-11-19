@@ -19,7 +19,6 @@ export class FastList {
     this.scroller.style.display = 'block'
     this.scroller.style.width = '10px'
     this.list.prepend(this.scroller)
-    this.datas = []
     this.size = 0
     /** @type{Record<string|number,Holder[]>} */
     this.holders = {}
@@ -157,8 +156,7 @@ export class FastList {
    * @param {any[]} datas
    */
   setDatas(datas) {
-    this.datas = datas || []
-    this.updateListData(this.datas)
+    this.updateListData(datas)
   }
 
   notifyAll() {
@@ -204,8 +202,8 @@ export class FastList {
     this.scroller.style.height = this.scrollBarHeight + 'px'
     for (let i = 0; i < this.renderData.length; i++) {
       const data = this.renderData[i]
-      let holder = this.getHolder(data.type)
-      this.handler.bindData(data.type, i + this.renderStart, holder, data)
+      let holder = this.getHolder(data?.type)
+      this.handler.bindData(data?.type, i + this.renderStart, holder, data)
       holder.dom.style.top = this.renderOffsets[i] + 'px'
     }
   }

@@ -266,7 +266,7 @@ export class ListState {
 
         await this.tick()
 
-        if (datas.length == 0) {
+        if (this.dataSize == 0) {
             return
         }
 
