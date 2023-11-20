@@ -36,7 +36,7 @@ export class ListState {
         this.listScrollTop = scrollTop
         this.hasInit = true
         this.onUpdate = callback
-        this.refresh()
+        await this.refresh()
     }
 
     async refresh() {
@@ -48,10 +48,9 @@ export class ListState {
     /**
      * @param {number} height
      */
-    updateListClientHeight(height) {
+    async updateListClientHeight(height) {
         this.listClientHeight = height
-        this.refresh()
-        this.scrollToWithListScrollTop(this.listScrollTop, false)
+        this.updateListScrollTop(0)
     }
 
     /**
@@ -60,6 +59,7 @@ export class ListState {
     updateListData(data) {
         this.data = data
         this.dataSize = data.length
+        this.sizeMap.clear()
         this.refresh()
     }
 
@@ -68,6 +68,7 @@ export class ListState {
      */
     updateListDataSize(size) {
         this.dataSize = Math.max(this.dataSize, size)
+        this.sizeMap.clear()
         this.refresh()
     }
 
@@ -189,12 +190,15 @@ export class ListState {
     }
 
     onScroll() {
-        if (this.skipOnScrollEventOnce) {
-            this.skipOnScrollEventOnce = false
+        if (Math.abs(this.list.scrollTop - this.lastCountListScrollTop) < 1) {
             return
         }
-        let percent = this.list.scrollTop / (this.scrollBarHeight - this.list.clientHeight)
-        let countListScrollTop = percent * (this.listContentHeight - this.list.clientHeight)
+        this.lastCountListScrollTop = this.list.scrollTop
+        let countListScrollTop = 0
+        if (this.scrollBarHeight > this.list.clientHeight && this.listContentHeight > this.list.clientHeight) {
+            let percent = this.list.scrollTop / (this.scrollBarHeight - this.list.clientHeight)
+            countListScrollTop = percent * (this.listContentHeight - this.list.clientHeight)
+        }
         if (Math.abs(countListScrollTop - this.listScrollTop) > 1) {
             this.scrollStateVersion++
             this.updateListScrollTop(countListScrollTop - this.listScrollTop)
@@ -206,7 +210,7 @@ export class ListState {
      * @returns {boolean} true if listScrollTop changed
      */
     updateListScrollTop(deltaY) {
-        if (!this.list) {
+        if (!this.hasInit) {
             return false
         }
 
@@ -216,16 +220,18 @@ export class ListState {
             countListScrollTop = 0
         }
 
-        if (countListScrollTop > this.listContentHeight - this.listClientHeight) {
+        if (this.listContentHeight > 0 && countListScrollTop > this.listContentHeight - this.listClientHeight) {
             countListScrollTop = this.listContentHeight - this.listClientHeight
         }
 
-        if (this.dataSize < this.listPageSize) {
+        if (this.dataSize <= this.listPageSize) {
             countListScrollTop = 0
         }
 
         if (Math.abs(countListScrollTop - this.listScrollTop) > 0.01) {
-            this.listScrollTop = countListScrollTop
+            if (this.listContentHeight > 0 || this.dataSize == 0) {
+                this.listScrollTop = countListScrollTop
+            }
             this.renderList(this.listScrollTop, this.data)
 
             return true
@@ -240,9 +246,17 @@ export class ListState {
     */
     async renderList(scrollTop, datas) {
         let o = countOffsetAndStartIndex(this.sizeMap, this.dataSize, this.listClientHeight, scrollTop)
-        this.scrollBarHeight = Math.min(this.listContentHeight, 100000)
-        let percent = scrollTop / (this.listContentHeight - this.listClientHeight)
-        let countScrollTop = percent * (this.scrollBarHeight - this.listClientHeight)
+
+        this.scrollBarHeight = 0
+        let countScrollTop = 0
+        if (this.listContentHeight > 0 && this.listClientHeight > 0) {
+            this.scrollBarHeight = Math.min(this.listContentHeight, 100000)
+            let percent = scrollTop / (this.listContentHeight - this.listClientHeight)
+            countScrollTop = percent * (this.scrollBarHeight - this.listClientHeight)
+        }
+        if (countScrollTop < 0) {
+            countScrollTop = 0
+        }
 
         o.offsets = o.offsets.map(o => o + countScrollTop)
 
@@ -270,10 +284,8 @@ export class ListState {
             return
         }
 
-        if (Math.abs(countScrollTop - this.list.scrollTop) > 0.01) {
-            this.skipOnScrollEventOnce = true
-            this.list.scrollTop = countScrollTop
-        }
+        this.lastCountListScrollTop = countScrollTop
+        this.list.scrollTop = countScrollTop
 
         let heightMapChange = false
 
